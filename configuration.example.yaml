@@ -1,0 +1,45 @@
+# Add to configuration.yaml, then restart Home Assistant (or reload pyscript).
+# Copy pyscript/apps/cosy_wc_tuner.py to <config>/pyscript/apps/cosy_wc_tuner.py
+#
+# Can share the pyscript: block with solis_ev_follow / solis_power_down.
+
+pyscript:
+  hass_is_global: true
+  allow_all_imports: true
+  apps:
+    cosy_wc_tuner:
+      # --- Entities ---
+      # The id in your heat pump entity names, e.g. for
+      # sensor.octopus_energy_heat_pump_00_1e_5e_09_02_ab_cd_live_outdoor_temperature
+      # it's 00_1e_5e_09_02_ab_cd.
+      heat_pump_id: 00_1e_5e_09_02_ab_cd
+      zone: zone_1               # climate.octopus_energy_heat_pump_<id>_<zone>
+      # room_temp_sensor: sensor.lounge_temperature   # optional, better than the zone's own reading
+      # Any entity can be overridden if yours are named differently:
+      # climate_entity: climate.octopus_energy_heat_pump_..._zone_1
+      # outdoor_temp_sensor: sensor.octopus_energy_heat_pump_..._live_outdoor_temperature
+      # power_sensor: sensor.octopus_energy_heat_pump_..._live_power_input
+      # wc_enabled_entity: binary_sensor.octopus_energy_heat_pump_..._weather_compensation_enabled
+      # wc_min_entity: sensor.octopus_energy_heat_pump_..._weather_compensation_minimum_temperature
+      # wc_max_entity: sensor.octopus_energy_heat_pump_..._weather_compensation_maximum_temperature
+      # fixed_flow_entity: sensor.octopus_energy_heat_pump_..._fixed_target_flow_temperature
+
+      # --- Your curve ---
+      # Outdoor temps where your curve reaches max / min flow (check the Octopus app).
+      curve_cold_outdoor: -3
+      curve_mild_outdoor: 15
+      min_flow_bounds: [30, 45]  # the tuner never moves the min end outside these
+      max_flow_bounds: [40, 57]  # your radiators / install sizing set the top
+      min_gap: 6                 # keep max - min at least this
+
+      # --- Behaviour (defaults shown) ---
+      run_at: "05:30"
+      step: 1.0                  # max change per end per run (degC)
+      min_days_between_changes: 2
+      settle_hours: 12
+      lookback_hours: 24
+      comfort_min_target: 19     # targets below this count as setback and are ignored
+      # notify_service: notify.mobile_app_your_phone
+
+      # Start with this on: works out and publishes the change without applying it.
+      diagnostics_only: true
